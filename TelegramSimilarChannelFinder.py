@@ -10,11 +10,13 @@ and the script will find and display similar channels. This is useful for discov
 communities on Telegram related to the user's interests.
 """
 
-from telethon import TelegramClient, functions, types
 import asyncio
+
 from prettytable import PrettyTable
-from termcolor import colored
+from telethon import functions, types
+from telethon.client import TelegramClient
 from telethon.errors.rpcerrorlist import RpcCallFailError
+from termcolor import colored
 
 __author__ = "H@ckila"
 __copyright__ = "Copyright 2023"
@@ -22,23 +24,24 @@ __version__ = "1.0.0"
 __status__ = "Dev"
 
 # API ID: Your unique Telegram API ID. You can get this from https://my.telegram.org
-API_ID = XXXXXXXX
+API_ID = "8275797495"
 
 # API Hash: Your unique Telegram API Hash. You can get this from https://my.telegram.org
-API_HASH = ''
+API_HASH = "AAGaCwuD-IEMtayjDBgUXfT1ZyhPZQjtfE8"
 
 # Session File Name: The name of the session file to be used by Telethon.
 # This file stores your login session to avoid re-logging in.
-SESSION_FILE_NAME = 'telegram'
+SESSION_FILE_NAME = "bot"
 
 # Proxy Configuration: Configure this if you are behind a proxy.
-# The format is a tuple: (proxy_type, hostname, port)
-PROXY = ('http', 'proxy.example.com', 3128)
+# The format is a tuple: (proxy_type, hostname, port)sss
+# PROXY = ""  # ('http', 'proxy.example.com', 3128)
 
 # CHANNELS: List of Telegram channel usernames to find similar channels for.
 # Replace the values with the usernames of the channels you are interested in.
 # The channel username can be found in the channel's invitation link, e.g., "redteamalerts" in "https://t.me/redteamalerts".
-CHANNELS = ['cibsecurity','CyberSecurityTechnologies','socanalyst']
+CHANNELS = ["latinas", "latinathots", "socal", "thots", "latina mega", "mega latinas"]
+
 
 def print_header():
     """
@@ -52,6 +55,7 @@ def print_header():
     """
     print(header)
 
+
 async def get_channel_id(client, username):
     """
     Retrieves the channel ID from a given username.
@@ -59,9 +63,12 @@ async def get_channel_id(client, username):
     try:
         entity = await client.get_entity(username)
         return entity.id
-    except Exception as e:
-        print(f"{colored('[!]', 'red')} No channel has {colored(username, 'red')} as username")
+    except Exception:
+        print(
+            f"{colored('[!]', 'red')} No channel has {colored(username, 'red')} as username"
+        )
         return None
+
 
 async def safe_api_request(coroutine, comment):
     """
@@ -75,25 +82,33 @@ async def safe_api_request(coroutine, comment):
         print(f"{colored('[!]', 'red')} General error, {comment}: {str(e)}")
     return None
 
+
 async def get_similar_channels(client, channel_username):
     """
     Finds similar Telegram channels given a channel username.
     """
     try:
         entity = await client.get_input_entity(channel_username)
-        if isinstance(entity, types.InputChannel) or isinstance(entity, types.InputPeerChannel):
-            input_channel = types.InputChannel(channel_id=entity.channel_id, access_hash=entity.access_hash)
-            result = await safe_api_request(client(functions.channels.GetChannelRecommendationsRequest(channel=input_channel)), 'retrieving channels')
+        if isinstance(entity, types.InputChannel) or isinstance(
+            entity, types.InputPeerChannel
+        ):
+            input_channel = types.InputChannel(
+                channel_id=entity.channel_id, access_hash=entity.access_hash
+            )
+            result = await safe_api_request(
+                client(
+                    functions.channels.GetChannelRecommendationsRequest(
+                        channel=input_channel
+                    )
+                ),
+                "retrieving channels",
+            )
             if not result:
                 return None
 
             similar_channels = []
             for ch in result.chats:
-                channel_info = {
-                    'username': ch.username,
-                    'title': ch.title,
-                    'id': ch.id
-                }
+                channel_info = {"username": ch.username, "title": ch.title, "id": ch.id}
                 similar_channels.append(channel_info)
 
             return similar_channels
@@ -104,6 +119,7 @@ async def get_similar_channels(client, channel_username):
         print(f"Error retrieving similar channels for {channel_username} {e}")
         return None
 
+
 def print_table(channel_data, username, channel_id):
     """
     Prints the data of similar Telegram channels in a table format.
@@ -113,17 +129,20 @@ def print_table(channel_data, username, channel_id):
     table.align = "c"
 
     for ch in channel_data:
-        table.add_row([ch['username'], ch['title'], ch['id']])
+        table.add_row([ch["username"], ch["title"], ch["id"]])
 
-    print(f"\n{colored('[INFO]', 'yellow')} Found similar channels for {colored(username, 'green')} / ID = {channel_id}")
+    print(
+        f"\n{colored('[INFO]', 'yellow')} Found similar channels for {colored(username, 'green')} / ID = {channel_id}"
+    )
     print(table)
+
 
 async def main(channel_usernames):
     """
     Main function to process a list of Telegram channel usernames and find similar channels.
     """
     print_header()
-    client = TelegramClient(SESSION_FILE_NAME, API_ID, API_HASH, proxy=PROXY)
+    client = TelegramClient(SESSION_FILE_NAME, API_ID, API_HASH)  # pyright: ignore[reportArgumentType]
 
     async with client:
         for username in channel_usernames:
@@ -137,9 +156,14 @@ async def main(channel_usernames):
                 if similar_channels:
                     print_table(similar_channels, username, channel_id)
                 else:
-                    print(f"\n{colored('[INFO]', 'yellow')} No similar channels found for {colored(username, 'yellow')}  / ID = {channel_id}")
+                    print(
+                        f"\n{colored('[INFO]', 'yellow')} No similar channels found for {colored(username, 'yellow')}  / ID = {channel_id}"
+                    )
             else:
-                print(f"{colored('[!]', 'red')} Channel {username} not found or error retrieving the ID.")
+                print(
+                    f"{colored('[!]', 'red')} Channel {username} not found or error retrieving the ID."
+                )
+
 
 if __name__ == "__main__":
     channel_usernames = CHANNELS

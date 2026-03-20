@@ -1,0 +1,6 @@
+__pycache__
+
+*.__pycache__
+*.session
+
+.DS_Store
